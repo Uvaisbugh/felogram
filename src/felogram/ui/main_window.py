@@ -6,7 +6,9 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QLabel, QMainWindow, QPushButton, QVBoxLayout, QWidget
 
+from felogram.application.auth import AuthRequestFactory
 from felogram.telegram.runtime import RuntimeEvent, RuntimeEventKind, TdRuntime
+from felogram.ui.auth_widget import AuthWidget
 from felogram.ui.runtime_thread import TdRuntimeThread
 
 
@@ -16,10 +18,11 @@ class MainWindow(QMainWindow):
         runtime_factory: Callable[[], TdRuntime],
         *,
         auto_start: bool = True,
+        auth_factory: AuthRequestFactory | None = None,
     ) -> None:
         super().__init__()
         self.setWindowTitle("Felogram")
-        self.resize(520, 300)
+        self.resize(620, 520)
 
         self._closing_requested = False
         self._allow_close = False
@@ -41,6 +44,8 @@ class MainWindow(QMainWindow):
         self._heartbeat.setObjectName("heartbeatLabel")
         self._heartbeat.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        self._auth = AuthWidget(auth_factory)
+
         self._close_button = QPushButton("Close")
         self._close_button.clicked.connect(self.close)
 
@@ -50,8 +55,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(self._title)
         layout.addWidget(self._status)
         layout.addWidget(self._version)
+        layout.addWidget(self._auth, 1)
         layout.addWidget(self._heartbeat)
-        layout.addStretch()
         layout.addWidget(self._close_button)
 
         content = QWidget()
@@ -62,6 +67,8 @@ class MainWindow(QMainWindow):
             "#titleLabel { font-size: 28px; font-weight: 600; }"
             "#statusLabel { font-size: 16px; }"
             "#versionLabel, #heartbeatLabel { color: #666; }"
+            "#authHeading { font-size: 20px; font-weight: 600; margin-bottom: 8px; }"
+            "QLineEdit { padding: 8px; }"
             "QPushButton { padding: 8px 18px; }"
         )
 
@@ -73,6 +80,8 @@ class MainWindow(QMainWindow):
         self._runtime_thread = TdRuntimeThread(runtime_factory, self)
         self._runtime_thread.event_received.connect(self._on_runtime_event)
         self._runtime_thread.finished.connect(self._on_runtime_finished)
+        self._auth.command_submitted.connect(self._runtime_thread.submit)
+        self._auth.input_error.connect(self._show_input_error)
         if auto_start:
             self._runtime_thread.start()
 
@@ -98,8 +107,15 @@ class MainWindow(QMainWindow):
             return
         if event.kind == RuntimeEventKind.VERSION:
             self._version.setText(event.message)
+        elif event.kind == RuntimeEventKind.AUTHORIZATION:
+            state = event.data or {"@type": event.message}
+            self._auth.handle_authorization(state)
+            self._status.setText(self._auth.friendly_state(event.message))
         else:
             self._status.setText(event.message)
+
+    def _show_input_error(self, message: str) -> None:
+        self._status.setText(message)
 
     def _on_runtime_finished(self) -> None:
         if self._closing_requested:

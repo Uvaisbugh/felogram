@@ -4,8 +4,9 @@ import logging
 import threading
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
+from queue import Empty, Queue
 from uuid import uuid4
 
 from felogram.telegram.transport import JsonObject, TdTransport
@@ -17,6 +18,7 @@ class RuntimeEventKind(StrEnum):
     STARTING = "starting"
     VERSION = "version"
     AUTHORIZATION = "authorization"
+    STATUS = "status"
     STOPPING = "stopping"
     STOPPED = "stopped"
     ERROR = "error"
@@ -26,6 +28,13 @@ class RuntimeEventKind(StrEnum):
 class RuntimeEvent:
     kind: RuntimeEventKind
     message: str
+    data: JsonObject | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeCommand:
+    operation: str
+    request: JsonObject = field(repr=False)
 
 
 class TdRuntime:
@@ -46,12 +55,15 @@ class TdRuntime:
         self,
         stop_requested: threading.Event,
         emit: Callable[[RuntimeEvent], None],
+        commands: Queue[RuntimeCommand] | None = None,
     ) -> None:
         client_id: int | None = None
         close_sent = False
         close_deadline: float | None = None
         closed = False
         version_request_id = f"felogram-version-{uuid4()}"
+        command_queue: Queue[RuntimeCommand] = commands or Queue()
+        pending_commands: dict[str, str] = {}
 
         try:
             emit(RuntimeEvent(RuntimeEventKind.STARTING, "Loading TDLib..."))
@@ -69,10 +81,14 @@ class TdRuntime:
                     self._transport.send(client_id, {"@type": "close"})
                     close_sent = True
                     close_deadline = time.monotonic() + self._close_timeout
+                elif not close_sent:
+                    self._drain_commands(client_id, command_queue, pending_commands)
 
                 response = self._transport.receive(self._receive_timeout)
                 if response is not None:
-                    closed = self._handle_response(response, version_request_id, emit)
+                    closed = self._handle_response(
+                        response, version_request_id, pending_commands, emit
+                    )
 
                 if (
                     close_sent
@@ -92,19 +108,51 @@ class TdRuntime:
             else:
                 emit(RuntimeEvent(RuntimeEventKind.STOPPED, "TDLib worker stopped"))
 
+    def _drain_commands(
+        self,
+        client_id: int,
+        commands: Queue[RuntimeCommand],
+        pending_commands: dict[str, str],
+    ) -> None:
+        while True:
+            try:
+                command = commands.get_nowait()
+            except Empty:
+                return
+
+            request_id = f"felogram-command-{uuid4()}"
+            request = dict(command.request)
+            request["@extra"] = request_id
+            pending_commands[request_id] = command.operation
+            self._transport.send(client_id, request)
+
     @staticmethod
     def _handle_response(
         response: JsonObject,
         version_request_id: str,
+        pending_commands: dict[str, str],
         emit: Callable[[RuntimeEvent], None],
     ) -> bool:
         response_type = response.get("@type")
+        response_extra = response.get("@extra")
 
-        if response.get("@extra") == version_request_id:
+        if response_extra == version_request_id:
             if response_type == "optionValueString" and isinstance(response.get("value"), str):
                 emit(RuntimeEvent(RuntimeEventKind.VERSION, f"TDLib {response['value']}"))
             elif response_type == "error":
                 emit(RuntimeEvent(RuntimeEventKind.ERROR, "TDLib version request failed"))
+
+        if isinstance(response_extra, str) and response_extra in pending_commands:
+            operation = pending_commands.pop(response_extra)
+            if response_type == "error":
+                error_message = response.get("message")
+                error_code = response.get("code")
+                detail = error_message if isinstance(error_message, str) else "Unknown TDLib error"
+                if isinstance(error_code, int):
+                    detail = f"{detail} (code {error_code})"
+                emit(RuntimeEvent(RuntimeEventKind.ERROR, f"{operation} failed: {detail}"))
+            else:
+                emit(RuntimeEvent(RuntimeEventKind.STATUS, f"{operation} accepted"))
 
         if response_type != "updateAuthorizationState":
             return False
@@ -123,5 +171,5 @@ class TdRuntime:
             emit(RuntimeEvent(RuntimeEventKind.ERROR, "TDLib authorization state has no type"))
             return False
 
-        emit(RuntimeEvent(RuntimeEventKind.AUTHORIZATION, state_type))
+        emit(RuntimeEvent(RuntimeEventKind.AUTHORIZATION, state_type, state))
         return state_type == "authorizationStateClosed"

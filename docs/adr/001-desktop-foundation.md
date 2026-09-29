@@ -2,7 +2,7 @@
 
 Date: 2026-09-28
 
-Status: Proposed; research complete, runtime verification pending.
+Status: Accepted and implemented.
 
 ## Context
 
@@ -43,6 +43,12 @@ Before promoting this ADR to implemented, demonstrate window startup, native
 version response, ordered event delivery, responsive UI while receiving, and
 graceful close. Record the actual package and runtime versions. Login and server
 connectivity are separate acceptance criteria for the next milestone.
+
+The gate passed on 2026-09-28 with CPython 3.14.7, PySide6 6.11.2, and TDLib
+1.8.67. The following authentication milestone added the queued command path,
+current TDLib authorization states, persistent session directories, and a
+Windows DPAPI-protected database key. Live account authorization remains a
+manual check because it requires user-owned Telegram credentials and codes.
 
 See the [research and setup plan](../RESEARCH_AND_SETUP.md) for primary sources,
 the environment inventory, exact setup sequence, and scope limits.

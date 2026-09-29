@@ -8,9 +8,9 @@ Use the installed CPython 3.14.7 with PySide6 6.11.2, the `tdjson` 1.8.67 Python
 binding, and one dedicated TDLib worker. Keep application logic independent of Qt
 and the native binding. Use uv, Ruff, mypy, and pytest.
 
-This is a researched proposal. Package metadata and source were inspected, but
-dependency installation, native loading, UI startup, and packaging have not yet
-been tested on this machine.
+The foundation was subsequently implemented and verified on this machine.
+Dependency installation, native TDLib loading, window startup, queued event
+delivery, and graceful shutdown pass. Packaging remains a later milestone.
 
 ## What the current ecosystem supports
 
@@ -120,7 +120,7 @@ database or duplicate its network synchronization engine.
 | Windows SDK include directory | 10.0.26100.0 |
 | Bundled CMake | 4.3.1-msvc1 |
 | Bundled Ninja | 1.13.2 |
-| PySide6 / tdjson | Not installed in the checked interpreter |
+| PySide6 / tdjson | 6.11.2 / 1.8.67 installed in the project environment |
 
 `cl`, CMake, and Ninja are not on the normal shell PATH, but were located inside
 Visual Studio Build Tools. This is not evidence that they need reinstalling.
