@@ -255,3 +255,17 @@ def test_large_history_and_accessible_controls(qtbot: QtBot) -> None:
         widget.chats,
     ):
         assert control.accessibleName()
+
+
+def test_filter_hiding_recipient_disables_send(qtbot: QtBot) -> None:
+    widget, commands = setup_chat(qtbot)
+    widget.composer.setPlainText("keep this draft")
+    count = len(commands)
+    widget.chat_filter.setText("Chat 2")
+    assert not widget.send.isEnabled()
+    widget._send_message()
+    assert len(commands) == count
+    assert "hidden" in widget.recipient.text()
+    widget.chat_filter.clear()
+    assert widget.send.isEnabled()
+    assert widget.composer.toPlainText() == "keep this draft"

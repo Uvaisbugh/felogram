@@ -2,7 +2,7 @@
 
 ## 1. Run on this PC
 
-- [x] Verify lint, formatting, types, and automated tests: 41 tests passed.
+- [x] Verify lint, formatting, types, and automated tests: 42 tests passed.
 - [x] Verify the locked installation with `uv sync --locked --group dev`.
 - [x] Run the installed `felogram-probe` entry point: TDLib 1.8.67 closes cleanly.
 - [x] Launch Felogram on this PC; account and snippet behavior verified by Qt tests.
@@ -55,7 +55,7 @@
 - [x] Prototype encrypted, account-specific local collections and unread filters.
 - [x] Investigate integration permission boundaries in `docs/RD_NEXT.md`.
 - [x] Build and smoke-test a local Windows executable; fix DLL search-path contamination.
-- [ ] Verify the Windows bundle on a fresh CI runner.
+- [x] Verify the Windows bundle on a fresh CI runner (run 37290475894).
 - [x] Define update-distribution gates and portable secure-storage requirements in `docs/RD_NEXT.md`.
 
 ## Remaining external verification
