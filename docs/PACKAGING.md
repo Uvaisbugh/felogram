@@ -1,7 +1,7 @@
 # Windows packaging verification
 
 Run `powershell -File scripts/build_windows.ps1` from the project.
-The bundle lives at `dist/Felogram/Felogram.exe`. Keep its `_internal` directory
+The bundle lives at `dist/local/Felogram/Felogram.exe`. Keep its `_internal` directory
 beside the executable. This prototype uses a console for diagnostic output.
 
 The script installs locked packaging dependencies, limits PATH to the Python

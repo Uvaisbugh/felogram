@@ -1,7 +1,7 @@
 # Live account verification
 
 Use your own credentials in Felogram's Telegram account tab, never in an issue.
-The local executable is `dist/Felogram/Felogram.exe`; keep its `_internal` folder.
+The local executable is `dist/local/Felogram/Felogram.exe`; keep its `_internal` folder.
 
 ## Account and session
 
