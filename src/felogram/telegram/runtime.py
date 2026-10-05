@@ -22,6 +22,8 @@ class RuntimeEventKind(StrEnum):
     STOPPING = "stopping"
     STOPPED = "stopped"
     ERROR = "error"
+    RESPONSE = "response"
+    UPDATE = "update"
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,6 +146,7 @@ class TdRuntime:
 
         if isinstance(response_extra, str) and response_extra in pending_commands:
             operation = pending_commands.pop(response_extra)
+            emit(RuntimeEvent(RuntimeEventKind.RESPONSE, operation, response))
             if response_type == "error":
                 error_message = response.get("message")
                 error_code = response.get("code")
@@ -155,6 +158,8 @@ class TdRuntime:
                 emit(RuntimeEvent(RuntimeEventKind.STATUS, f"{operation} accepted"))
 
         if response_type != "updateAuthorizationState":
+            if isinstance(response_type, str) and response_type.startswith("update"):
+                emit(RuntimeEvent(RuntimeEventKind.UPDATE, response_type, response))
             return False
 
         state = response.get("authorization_state")

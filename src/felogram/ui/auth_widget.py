@@ -50,7 +50,9 @@ class AuthWidget(QWidget):
             "authPremiumPage",
             "Telegram requires a Premium purchase before this account can continue.",
         )
-        self._ready_page = self._message_page("authReadyPage", "Signed in. Messaging comes next.")
+        self._ready_page = self._message_page(
+            "authReadyPage", "Signed in. Open Chats (preview) to browse read-only history."
+        )
         self._unsupported_page = self._message_page(
             "authUnsupportedPage", "Telegram needs an authorization step Felogram cannot show yet."
         )

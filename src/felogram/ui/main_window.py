@@ -4,12 +4,14 @@ from collections.abc import Callable
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QLabel, QMainWindow, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLabel, QMainWindow, QPushButton, QTabWidget, QVBoxLayout, QWidget
 
 from felogram.application.auth import AuthRequestFactory
 from felogram.telegram.runtime import RuntimeEvent, RuntimeEventKind, TdRuntime
 from felogram.ui.auth_widget import AuthWidget
+from felogram.ui.chat_widget import ChatWidget
 from felogram.ui.runtime_thread import TdRuntimeThread
+from felogram.ui.snippet_widget import SnippetWidget
 
 
 class MainWindow(QMainWindow):
@@ -45,6 +47,13 @@ class MainWindow(QMainWindow):
         self._heartbeat.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self._auth = AuthWidget(auth_factory)
+        tabs = QTabWidget()
+        tabs.addTab(self._auth, "Telegram account")
+        self._chats = ChatWidget()
+        tabs.addTab(self._chats, "Chats (preview)")
+        tabs.addTab(SnippetWidget(), "Code snippets")
+        tagline = QLabel("Telegram for developers · Early alpha")
+        tagline.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self._close_button = QPushButton("Close")
         self._close_button.clicked.connect(self.close)
@@ -53,9 +62,10 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(36, 36, 36, 36)
         layout.setSpacing(14)
         layout.addWidget(self._title)
+        layout.addWidget(tagline)
         layout.addWidget(self._status)
         layout.addWidget(self._version)
-        layout.addWidget(self._auth, 1)
+        layout.addWidget(tabs, 1)
         layout.addWidget(self._heartbeat)
         layout.addWidget(self._close_button)
 
@@ -81,6 +91,7 @@ class MainWindow(QMainWindow):
         self._runtime_thread.event_received.connect(self._on_runtime_event)
         self._runtime_thread.finished.connect(self._on_runtime_finished)
         self._auth.command_submitted.connect(self._runtime_thread.submit)
+        self._chats.command_submitted.connect(self._runtime_thread.submit)
         self._auth.input_error.connect(self._show_input_error)
         if auto_start:
             self._runtime_thread.start()
@@ -105,13 +116,14 @@ class MainWindow(QMainWindow):
     def _on_runtime_event(self, event: object) -> None:
         if not isinstance(event, RuntimeEvent):
             return
+        self._chats.handle_event(event)
         if event.kind == RuntimeEventKind.VERSION:
             self._version.setText(event.message)
         elif event.kind == RuntimeEventKind.AUTHORIZATION:
             state = event.data or {"@type": event.message}
             self._auth.handle_authorization(state)
             self._status.setText(self._auth.friendly_state(event.message))
-        else:
+        elif event.kind not in {RuntimeEventKind.RESPONSE, RuntimeEventKind.UPDATE}:
             self._status.setText(event.message)
 
     def _show_input_error(self, message: str) -> None:
