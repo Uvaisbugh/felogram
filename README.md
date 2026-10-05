@@ -2,6 +2,12 @@
 
 **Telegram for developers.** An independent Windows desktop client built with Python, PySide6, and TDLib.
 
+This repository contains the **experimental Python prototype**. The production
+direction targets native Windows and Android clients on mature upstream foundations.
+See the [client comparison](docs/CLIENT_RESEARCH.md), [revised product plan](docs/PRODUCT_PLAN.md),
+and separate [Android foundation](https://github.com/Uvaisbugh/felogram-android).
+The proposed native products have not shipped Felogram binaries yet.
+
 ## Early alpha
 
 Implemented: responsive desktop UI, account authorization screens, persistent sessions with a Windows DPAPI-protected database key, and local code-snippet clipboard export.
