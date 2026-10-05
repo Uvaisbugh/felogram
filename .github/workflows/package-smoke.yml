@@ -20,7 +20,7 @@ jobs:
           $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
           $env:PYTHONPATH = ''
           $env:PYTHONHOME = ''
-          & .\dist\Felogram\Felogram.exe --probe
+          & .\dist\local\Felogram\Felogram.exe --probe
           if ($LASTEXITCODE -ne 0) { throw 'Isolated native probe failed' }
-          & .\dist\Felogram\Felogram.exe --smoke-test
+          & .\dist\local\Felogram\Felogram.exe --smoke-test
           if ($LASTEXITCODE -ne 0) { throw 'Isolated desktop smoke test failed' }
