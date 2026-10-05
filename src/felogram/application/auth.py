@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import os
 import platform
 import re
@@ -63,6 +64,10 @@ class AppPaths:
     def protected_key_path(self) -> Path:
         return self.data_root / "secrets" / "tdlib-database-key.dpapi"
 
+    @property
+    def api_credentials_path(self) -> Path:
+        return self.data_root / "secrets" / "telegram-api.dpapi"
+
 
 class AuthRequestFactory:
     """Validate input and build the narrow set of TDLib authorization requests."""
@@ -74,6 +79,32 @@ class AuthRequestFactory:
     ) -> None:
         self._paths = paths or AppPaths.default()
         self._secret_store = secret_store or WindowsDpapiSecretStore(self._paths.protected_key_path)
+
+    def load_api_credentials(self) -> TelegramApiCredentials | None:
+        path = self._paths.api_credentials_path
+        if not path.exists():
+            return None
+        payload = json.loads(WindowsDpapiSecretStore._unprotect(path.read_bytes()))
+        if not isinstance(payload, dict):
+            raise AuthInputError("Saved API credentials could not be read")
+        return TelegramApiCredentials.parse(
+            str(payload.get("api_id", "")), str(payload.get("api_hash", ""))
+        )
+
+    def remember_api_credentials(self, api_id: str, api_hash: str) -> None:
+        credentials = TelegramApiCredentials.parse(api_id, api_hash)
+        payload = json.dumps(
+            {"api_id": credentials.api_id, "api_hash": credentials.api_hash}
+        ).encode()
+        protected = WindowsDpapiSecretStore._protect(payload)
+        path = self._paths.api_credentials_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(".tmp")
+        temporary.write_bytes(protected)
+        temporary.replace(path)
+
+    def forget_api_credentials(self) -> None:
+        self._paths.api_credentials_path.unlink(missing_ok=True)
 
     def configure(self, api_id: str, api_hash: str) -> RuntimeCommand:
         credentials = TelegramApiCredentials.parse(api_id, api_hash)

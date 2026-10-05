@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable
+from contextlib import suppress
 from html import escape
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QCheckBox,
     QFormLayout,
     QLabel,
     QLineEdit,
@@ -34,6 +36,10 @@ class AuthWidget(QWidget):
     ) -> None:
         super().__init__(parent)
         self._requests = request_factory or AuthRequestFactory()
+        self._saved_api = None
+        with suppress(OSError, ValueError, SecretStoreError):
+            self._saved_api = self._requests.load_api_credentials()
+        self._resumed_api = False
         self._pages = QStackedWidget()
         self._pages.setObjectName("authPages")
 
@@ -51,7 +57,7 @@ class AuthWidget(QWidget):
             "Telegram requires a Premium purchase before this account can continue.",
         )
         self._ready_page = self._message_page(
-            "authReadyPage", "Signed in. Open Chats (preview) to browse read-only history."
+            "authReadyPage", "Signed in. Open Chats to read, search, or write messages."
         )
         self._unsupported_page = self._message_page(
             "authUnsupportedPage", "Telegram needs an authorization step Felogram cannot show yet."
@@ -116,6 +122,13 @@ class AuthWidget(QWidget):
             )
 
         self._pages.setCurrentWidget(page)
+        if (
+            state_type == "authorizationStateWaitTdlibParameters"
+            and self._saved_api is not None
+            and not self._resumed_api
+        ):
+            self._resumed_api = True
+            self._submit_api()
 
     @staticmethod
     def friendly_state(state_type: str) -> str:
@@ -148,8 +161,19 @@ class AuthWidget(QWidget):
         self._api_hash.setObjectName("apiHashInput")
         self._api_hash.setEchoMode(QLineEdit.EchoMode.Password)
         self._api_hash.setPlaceholderText("32-character API hash")
+        if self._saved_api is not None:
+            self._api_id.setText(str(self._saved_api.api_id))
+            self._api_hash.setText(self._saved_api.api_hash)
         form.addRow("API ID", self._api_id)
         form.addRow("API hash", self._api_hash)
+        credentials_link = QLabel(
+            '<a href="https://my.telegram.org/apps">Get Telegram API credentials</a>'
+        )
+        credentials_link.setOpenExternalLinks(True)
+        form.addRow(credentials_link)
+        self._remember_api = QCheckBox("Remember API credentials securely on this Windows account")
+        self._remember_api.setChecked(self._saved_api is not None)
+        form.addRow(self._remember_api)
         self._add_button(
             form,
             "Continue",
@@ -266,7 +290,11 @@ class AuthWidget(QWidget):
     def _submit_api(self) -> None:
         try:
             command = self._requests.configure(self._api_id.text(), self._api_hash.text())
-        except (AuthInputError, SecretStoreError) as exc:
+            if self._remember_api.isChecked():
+                self._requests.remember_api_credentials(self._api_id.text(), self._api_hash.text())
+            else:
+                self._requests.forget_api_credentials()
+        except (AuthInputError, SecretStoreError, OSError) as exc:
             self.input_error.emit(str(exc))
             return
         self._api_hash.clear()
