@@ -83,3 +83,18 @@ def test_dpapi_secret_store_round_trip(tmp_path: Path, monkeypatch: pytest.Monke
     assert len(first) == 32
     assert second == first
     assert path.read_bytes() != first
+
+
+@pytest.mark.native
+def test_remembered_credentials_are_protected_and_can_be_forgotten(tmp_path: Path) -> None:
+    factory = AuthRequestFactory(AppPaths(tmp_path), FakeSecretStore(b"a" * 32))
+    assert factory.load_api_credentials() is None
+    api_hash = "0123456789abcdef0123456789abcdef"
+    factory.remember_api_credentials("12345", api_hash)
+    assert api_hash.encode() not in (tmp_path / "secrets" / "telegram-api.dpapi").read_bytes()
+    credentials = factory.load_api_credentials()
+    assert credentials is not None
+    assert credentials.api_id == 12345
+    assert credentials.api_hash == api_hash
+    factory.forget_api_credentials()
+    assert factory.load_api_credentials() is None

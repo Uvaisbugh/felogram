@@ -1,0 +1,26 @@
+name: Windows package smoke
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.10'
+      - name: Build and verify the local bundle on a fresh Windows runner
+        shell: pwsh
+        run: ./scripts/build_windows.ps1
+      - name: Verify with external Python paths removed
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $env:PYTHONPATH = ''
+          $env:PYTHONHOME = ''
+          & .\dist\Felogram\Felogram.exe --probe
+          if ($LASTEXITCODE -ne 0) { throw 'Isolated native probe failed' }
+          & .\dist\Felogram\Felogram.exe --smoke-test
+          if ($LASTEXITCODE -ne 0) { throw 'Isolated desktop smoke test failed' }

@@ -2,7 +2,7 @@
 
 ## 1. Run on this PC
 
-- [x] Verify lint, formatting, types, and automated tests: 23 tests passed.
+- [x] Verify lint, formatting, types, and automated tests: 41 tests passed.
 - [x] Verify the locked installation with `uv sync --locked --group dev`.
 - [x] Run the installed `felogram-probe` entry point: TDLib 1.8.67 closes cleanly.
 - [x] Launch Felogram on this PC; account and snippet behavior verified by Qt tests.
@@ -38,23 +38,32 @@
 - [x] Add correlated responses and ordered update events; domain-specific typed models remain future work.
 - [x] Implement an experimental main chat list and read-only message history.
 - [x] Add history pagination, connection status, and manual retry after history errors.
-- [ ] Implement text sending with duplicate-safe retry behavior.
+- [x] Implement text sending with duplicate-safe retries of TDLib's failed message ID.
 - [ ] Verify message exchange with two test accounts, reconnect, and shutdown.
 
 ### Developer experience
 
 - [x] Research native code entities and sending requirements; record the next gate in `docs/RD_MESSAGING.md`.
-- [ ] Add code display, language labels, and code-copy actions.
-- [ ] Define keyboard navigation and shortcut discovery.
-- [ ] Add message search and saved searches.
-- [ ] Validate accessibility, large histories, and technical group workflows.
+- [x] Add native code messages, code display, language labels, and code-copy actions.
+- [x] Add keyboard navigation, focus shortcuts, and F1 shortcut discovery.
+- [x] Add paginated message search and encrypted, account-specific saved searches.
+- [x] Verify accessible control labels and a 2,000-message synthetic history.
+- [ ] Verify assistive technology and real technical-group workflows with signed-in accounts.
 
 ### Later research
 
-- [ ] Prototype local chat collections and unread filters.
-- [ ] Investigate user-triggered project integrations with explicit permissions.
-- [ ] Evaluate clean-machine Windows packaging and update distribution.
-- [ ] Evaluate portable secure key storage before considering other platforms.
+- [x] Prototype encrypted, account-specific local collections and unread filters.
+- [x] Investigate integration permission boundaries in `docs/RD_NEXT.md`.
+- [x] Build and smoke-test a local Windows executable; fix DLL search-path contamination.
+- [ ] Verify the Windows bundle on a fresh CI runner.
+- [x] Define update-distribution gates and portable secure-storage requirements in `docs/RD_NEXT.md`.
+
+## Remaining external verification
+
+Personal Telegram credentials and sign-in must be entered in the app. Live
+two-account message exchange, session reopening, and assistive-technology checks
+remain manual. No public executable or installer is released until the native
+dependency notices and end-user verification are complete.
 
 Follow [the product plan](docs/PRODUCT_PLAN.md) for milestone acceptance gates
 and [the release checklist](docs/RELEASING.md) before publication.

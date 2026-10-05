@@ -6,7 +6,8 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QLabel, QMainWindow, QPushButton, QTabWidget, QVBoxLayout, QWidget
 
-from felogram.application.auth import AuthRequestFactory
+from felogram.application.auth import AppPaths, AuthRequestFactory
+from felogram.application.preferences import PreferenceStore
 from felogram.telegram.runtime import RuntimeEvent, RuntimeEventKind, TdRuntime
 from felogram.ui.auth_widget import AuthWidget
 from felogram.ui.chat_widget import ChatWidget
@@ -24,7 +25,7 @@ class MainWindow(QMainWindow):
     ) -> None:
         super().__init__()
         self.setWindowTitle("Felogram")
-        self.resize(620, 520)
+        self.resize(1180, 900)
 
         self._closing_requested = False
         self._allow_close = False
@@ -49,8 +50,13 @@ class MainWindow(QMainWindow):
         self._auth = AuthWidget(auth_factory)
         tabs = QTabWidget()
         tabs.addTab(self._auth, "Telegram account")
-        self._chats = ChatWidget()
-        tabs.addTab(self._chats, "Chats (preview)")
+        store = (
+            PreferenceStore(AppPaths.default().data_root / "workspace.dpapi")
+            if auto_start
+            else None
+        )
+        self._chats = ChatWidget(store=store)
+        tabs.addTab(self._chats, "Chats")
         tabs.addTab(SnippetWidget(), "Code snippets")
         tagline = QLabel("Telegram for developers · Early alpha")
         tagline.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -59,7 +65,7 @@ class MainWindow(QMainWindow):
         self._close_button.clicked.connect(self.close)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(36, 36, 36, 36)
+        layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(14)
         layout.addWidget(self._title)
         layout.addWidget(tagline)
