@@ -25,7 +25,7 @@
 - [x] Enable private vulnerability reporting.
 - [x] Protect the default branch with required Windows checks.
 - [x] Add repository description, topics, milestone, and issues #1–#3.
-- [ ] Publish a source alpha with clear limitations: read-only chats are
+- [x] Publish v0.1.0-alpha.1 with clear limitations: read-only chats are
   experimental, sending is unavailable, and live login is not yet verified.
 - [ ] Verify packaging and dependency redistribution requirements before
   distributing desktop binaries.
