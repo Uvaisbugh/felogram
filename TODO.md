@@ -20,13 +20,13 @@
 - [x] License original project source under MIT and inspect runtime license metadata.
 - [x] Check repository-name availability under Uvaisbugh.
 - [x] Create https://github.com/Uvaisbugh/felogram and configure origin.
-- [ ] Commit and push the reviewed source.
-- [ ] Confirm the Windows workflow passes on GitHub.
+- [x] Commit and push the reviewed source to the public repository.
+- [x] Confirm the Windows workflow passes on GitHub (run 37286548316).
 - [x] Enable private vulnerability reporting.
-- [ ] Protect the default branch with required Windows checks.
-- [ ] Add repository description, topics, and milestone issues.
-- [ ] Publish a source alpha with clear limitations: chat reading and sending
-  are not implemented; state the actual manual login verification results.
+- [x] Protect the default branch with required Windows checks.
+- [x] Add repository description, topics, milestone, and issues #1–#3.
+- [ ] Publish a source alpha with clear limitations: read-only chats are
+  experimental, sending is unavailable, and live login is not yet verified.
 - [ ] Verify packaging and dependency redistribution requirements before
   distributing desktop binaries.
 
