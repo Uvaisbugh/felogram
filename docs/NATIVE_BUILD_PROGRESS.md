@@ -37,10 +37,14 @@ Status ok and the welcome screen rendered; no fatal AndroidRuntime exception
 was recorded. No sign-in or messaging was tested. The emulator was then closed
 to free memory for Windows compilation. This does not replace ARM64-device tests.
 
-Packaging limitation discovered: the injected ABI property limits compilation,
-but the APK still contains other-ABI MLKit libraries without matching Telegram
-libraries. A build-helper correction now filters packaged ABIs too; its rebuild
-and artifact verification remain pending. Other ABI builds remain unverified.
+The ABI packaging correction is verified: the helper now filters packaged
+libraries as well as native compilation. The rebuilt APK contains only ARM64
+Telegram/MLKit libraries, advertises only ARM64, passes signature verification,
+and opens offline in the same isolated emulator. Build: 1m22s, 301 tasks,
+297 up-to-date. Corrected artifact: 62,343,517 bytes, SHA-256
+`3EC0DC57D221595CCBF2F33431DC22347A5802AD52A3E9BBB12EDA11FC18425E`.
+Minimum SDK 21, target SDK 36. Other ABIs and physical devices remain unverified.
+The correction and source/submodule manifest are merged in Android PR #4.
 
 ## Section 2: Windows native build foundation
 
@@ -78,9 +82,9 @@ not a successful dependency/native build. The preflight changes no system settin
 
 The preparation helper builds Qt 6 Debug dependencies inside this project's build
 directory, restores temporary environment settings and prevents overlapping
-helper runs. The first attempt failed to load Windows PowerShell's archive module.
+helper runs. Future helper invocations limit CMake compilation to two workers by default; `-BuildWorkers` can override this and the previous environment value is restored. The first attempt failed to load Windows PowerShell's archive module.
 Using that shell's own module path fixed the failure without changing upstream
-source. The retry completed dependency stages through libvpx (20/32). It was paused deliberately while Android finished to avoid exhausting this 16 GB host. Windows preparation resumed with those caches and passed Little CMS. The helper uses upstream's `silent` option to rebuild stale/partial caches without an interactive keypress, with unbuffered Python logging. FFmpeg preparation is underway; no native desktop executable exists yet.
+source. The retry completed dependency stages through libvpx (20/32). It was paused deliberately while Android finished to avoid exhausting this 16 GB host. Windows preparation resumed with those caches and passed Little CMS. The helper uses upstream's `silent` option to rebuild stale/partial caches without an interactive keypress, with unbuffered Python logging. FFmpeg, HEIF image support, OpenAL audio support and Breakpad preparation completed. Qt 6.11.2 Debug is compiling (stage 28/32); no native desktop executable exists yet.
 
 
 On a fresh project checkout, prepare the pinned source first:
