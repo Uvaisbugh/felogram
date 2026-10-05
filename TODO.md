@@ -1,5 +1,18 @@
 # Felogram to-do list
 
+## Production Windows and Android direction (2026-10-05)
+
+- [x] Research client alternatives and define native product journeys/quality gates.
+- [x] Create separate Android source fork: Uvaisbugh/felogram-android.
+- [ ] Reproduce upstream Windows and Android builds; record toolchains and source SHAs.
+- [ ] Add independent branding, package/storage identity and About/source links.
+- [ ] Verify everyday messaging, media, notifications, accounts and reconnect on devices.
+- [ ] Implement local project workspaces, bookmarks, code copy and saved searches.
+- [ ] Measure performance/accessibility and rehearse upstream merges.
+- [ ] Verify signing, licensing, install/update/uninstall before publishing binaries.
+
+The lists below track the Python prototype, not native product completion.
+
 ## 1. Run on this PC
 
 - [x] Verify lint, formatting, types, and automated tests: 42 tests passed.
