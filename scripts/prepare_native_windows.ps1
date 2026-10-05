@@ -33,7 +33,7 @@ try {
     $env:FELOGRAM_VCVARS = $vcvars
     $env:FELOGRAM_PREPARE = $prepareFile
     & "$env:SystemRoot\System32\cmd.exe" /d /v:off /c `
-        'call "%FELOGRAM_VCVARS%" -vcvars_ver=14.44 && python "%FELOGRAM_PREPARE%" qt6 skip-release'
+        'call "%FELOGRAM_VCVARS%" -vcvars_ver=14.44 && python -u "%FELOGRAM_PREPARE%" qt6 skip-release silent'
     if ($LASTEXITCODE -ne 0) { throw "Upstream dependency preparation failed with exit code $LASTEXITCODE." }
 } finally {
     Pop-Location
