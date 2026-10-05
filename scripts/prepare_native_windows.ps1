@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
     [string]$SourcePath = (Join-Path $PSScriptRoot '..\build\tdesktop-baseline'),
+    [ValidateRange(1, 16)]
+    [int]$BuildWorkers = 2,
     [switch]$PreflightOnly
 )
 
@@ -27,11 +29,13 @@ $lockStream = [IO.File]::Open($lockPath, [IO.FileMode]::CreateNew, [IO.FileAcces
 $previousModules = $env:PSModulePath
 $previousVcvars = $env:FELOGRAM_VCVARS
 $previousPrepare = $env:FELOGRAM_PREPARE
+$previousParallel = $env:CMAKE_BUILD_PARALLEL_LEVEL
 Push-Location $sourceRoot
 try {
     $env:PSModulePath = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\Modules;$env:ProgramFiles\WindowsPowerShell\Modules"
     $env:FELOGRAM_VCVARS = $vcvars
     $env:FELOGRAM_PREPARE = $prepareFile
+    $env:CMAKE_BUILD_PARALLEL_LEVEL = $BuildWorkers.ToString()
     & "$env:SystemRoot\System32\cmd.exe" /d /v:off /c `
         'call "%FELOGRAM_VCVARS%" -vcvars_ver=14.44 && python -u "%FELOGRAM_PREPARE%" qt6 skip-release silent'
     if ($LASTEXITCODE -ne 0) { throw "Upstream dependency preparation failed with exit code $LASTEXITCODE." }
@@ -40,6 +44,7 @@ try {
     $env:PSModulePath = $previousModules
     $env:FELOGRAM_VCVARS = $previousVcvars
     $env:FELOGRAM_PREPARE = $previousPrepare
+    $env:CMAKE_BUILD_PARALLEL_LEVEL = $previousParallel
     $lockStream.Dispose()
     Remove-Item -LiteralPath $lockPath
 }
