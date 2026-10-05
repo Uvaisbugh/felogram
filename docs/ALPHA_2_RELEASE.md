@@ -12,11 +12,11 @@
 
 ## Verification
 
-41 automated tests, Ruff lint/format, strict mypy, native TDLib schema parsing,
+42 automated tests, Ruff lint/format, strict mypy, native TDLib schema parsing,
 real Windows encryption, and source desktop startup/shutdown passed locally.
 A one-folder executable also passed local native and desktop probes after fixing
-DLL discovery. A manually dispatched packaging workflow tests on a fresh Windows
-runner without publishing binary artifacts.
+DLL discovery. The packaging workflow passed on a fresh Windows runner
+(run 37290475894), without publishing binary artifacts.
 
 ## Alpha limitations
 

@@ -14,6 +14,9 @@ the native loader and desktop smoke checks.
 Local verification on 2026-10-05: Windows 11 build 26300, Python 3.14.7,
 PyInstaller 6.22.3, TDLib 1.8.67. Both packaged probes passed.
 
+Fresh-runner verification also passed:
+[Windows package smoke run 37290475894](https://github.com/Uvaisbugh/felogram/actions/runs/37290475894).
+
 The manually dispatched Windows package smoke workflow repeats the build on a
 fresh GitHub Windows runner and executes it with external Python paths removed.
 It deliberately does not upload a downloadable binary or attach an installer

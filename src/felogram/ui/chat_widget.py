@@ -145,6 +145,9 @@ class ChatWidget(QWidget):
         self.copy_code.clicked.connect(self._copy_code)
         code_row.addWidget(self.copy_code)
         layout.addLayout(code_row)
+        self.recipient = QLabel("Select a chat before writing a message.")
+        self.recipient.setWordWrap(True)
+        layout.addWidget(self.recipient)
         self.composer = QPlainTextEdit()
         self.composer.setPlaceholderText("Write a message (Ctrl+Enter to send)")
         self.composer.setAccessibleName("Message draft")
@@ -427,6 +430,7 @@ class ChatWidget(QWidget):
             if chat_id == self._chat_id:
                 self.chats.setCurrentItem(item)
         self.chats.blockSignals(False)
+        self._update_send_controls()
 
     def _select_chat(
         self, current: QListWidgetItem | None, previous: QListWidgetItem | None
@@ -521,7 +525,18 @@ class ChatWidget(QWidget):
 
     def _update_send_controls(self) -> None:
         attempt = self._outbox.attempt
-        self.send.setEnabled(self._ready and self._chat_id is not None and attempt is None)
+        selected = self.chats.currentItem()
+        visible = selected is not None and selected.data(Qt.ItemDataRole.UserRole) == self._chat_id
+        self.send.setEnabled(self._ready and visible and attempt is None)
+        if visible and self._chat_id is not None:
+            title = str(self._chats.get(self._chat_id, {}).get("title", "Untitled chat"))
+            self.recipient.setText(f"To: {title}")
+        elif self._chat_id is not None:
+            self.recipient.setText(
+                "Selected chat is hidden by the filter. Select a visible chat to send."
+            )
+        else:
+            self.recipient.setText("Select a chat before writing a message.")
         self.retry.setEnabled(
             self._ready
             and attempt is not None
@@ -538,7 +553,13 @@ class ChatWidget(QWidget):
         )
 
     def _send_message(self) -> None:
-        if not self._ready or self._chat_id is None:
+        selected = self.chats.currentItem()
+        if (
+            not self._ready
+            or self._chat_id is None
+            or selected is None
+            or selected.data(Qt.ItemDataRole.UserRole) != self._chat_id
+        ):
             self.delivery.setText("Sign in and select a chat first.")
             return
         try:
