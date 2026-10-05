@@ -4,6 +4,8 @@
 
 - [x] Research client alternatives and define native product journeys/quality gates.
 - [x] Create separate Android source fork: Uvaisbugh/felogram-android.
+- [x] Initialize pinned source/submodules and verify Android wrapper/toolchain preflight.
+- [x] Install/verify Windows MSVC 14.44 and start Debug dependency preparation.
 - [ ] Reproduce upstream Windows and Android builds; record toolchains and source SHAs.
 - [ ] Add independent branding, package/storage identity and About/source links.
 - [ ] Verify everyday messaging, media, notifications, accounts and reconnect on devices.

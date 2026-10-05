@@ -22,7 +22,10 @@ NDK 28.2.13676358 initially differed from pinned requirement 27.2.12479018.
 Preflight correctly reported it. Gradle installed the exact NDK using existing
 accepted SDK licenses; preflight now passes. No Android device is connected.
 
-Default baseline task: `:TMessagesProj_App:assembleAfatDebug`. Build result and
+The ARM64 native library linked successfully. The initial multi-ABI attempt was
+stopped deliberately after that result to package the first phone baseline.
+Default helper target: `:TMessagesProj_App:assembleAfatDebug`, restricted to
+`arm64-v8a`. Other ABIs remain separate verification work. Build result and
 remaining blockers will be recorded after the attempt, separately from wrapper
 and build-plugin compilation. Baseline uses upstream identity/configuration and
 is not a Felogram-distribution candidate.
@@ -40,8 +43,10 @@ Build Tools installations. A corrected query using `-products '*'` and the C++
 component requirement found VS Build Tools 18.9.12120.119. Only MSVC 14.51.36231
 is installed; initializing required toolset 14.44 failed. An attempt to add
 Microsoft's 14.44 component exited 5007, requiring elevated installer execution.
-Dependency preparation remains open. Do not label the Python executable a
-native production build.
+After administrator approval, the install succeeded (exit 0). MSVC 14.44.35207
+is present and compiler preflight passes. Recursive upstream source checkout is
+complete and Qt 6 Debug dependency preparation has started. Do not label the
+Python executable a native production build.
 
 The source's Windows build guide specifies VS 2026 with selected toolset 14.44;
 its AGENTS file also contains older VS 2022 setup references. Resolve the exact
@@ -52,10 +57,18 @@ where supported. API configuration is another unresolved setup dependency.
 
 ```powershell
 ./scripts/check_native_windows.ps1
+./scripts/prepare_native_windows.ps1 -PreflightOnly
+./scripts/prepare_native_windows.ps1
 ```
 
 Exit 1 identifies missing prerequisites; exit 0 only confirms presence checks,
-not a successful dependency/native build. No system configuration is changed.
+not a successful dependency/native build. The preflight changes no system settings.
+
+The preparation helper builds Qt 6 Debug dependencies inside this project's build
+directory, restores temporary environment settings and prevents overlapping
+helper runs. The first attempt failed to load Windows PowerShell's archive module.
+Using that shell's own module path fixed the failure without changing upstream
+source. The retry reused completed steps and built native libraries.
 
 ## Section 3: independent identity
 

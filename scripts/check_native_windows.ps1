@@ -26,7 +26,12 @@ $result = [ordered]@{
     windowsSdk26100Present = Test-Path -LiteralPath $sdkLib
     msvc1444Present = $compatibleToolsets.Count -gt 0
     cppInstallations = @($installations | ForEach-Object {
-        [ordered]@{ path = $_.installationPath; version = $_.installationVersion }
+        [ordered]@{
+            path = $_.installationPath
+            version = $_.installationVersion
+            msvc1444Present = @(Get-ChildItem (Join-Path $_.installationPath 'VC\Tools\MSVC') `
+                -Directory -Filter '14.44.*' -ErrorAction SilentlyContinue).Count -gt 0
+        }
     })
     nativeBuildVerified = $false
 }
